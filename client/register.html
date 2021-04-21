@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/register.css" rel="stylesheet" />
+	</head>
+		<header class="header">注册</header>
+		<section class="item-box">
+			<label>用户名:</label>
+			<input type="text" id="username"/>
+		</section>
+		<section class="item-box">
+			<label>密码:</label>
+			<input type="password" id="password"/>
+		</section>
+		<section class="item-box">
+			<label>确认密码:</label>
+			<input type="password" id="passwordAgain"/>
+		</section>
+		<section class="accept">
+			<input type="checkbox" checked="checked" />
+			<span>我已阅读并同意<a href="">《点滴个人隐私条款》</a></span>
+		</section>
+		<section class="register" id="register">注册</section>
+		<a class="login" href="login.html">直接登录</a>
+	<body>
+		<script type="text/javascript">
+			document.getElementById("register").onclick = function(){
+				let username = document.getElementById("username").value
+				let password = document.getElementById("password").value
+				let passwordAgain = document.getElementById("passwordAgain").value
+				if(username == ""){
+					alert("用户名不能为空")
+					return
+				}
+				if(password == ""){
+					alert("密码不能为空")
+					return
+				}
+				if(password != passwordAgain){
+					alert("确认密码和密码不一致")
+					return
+				}
+				let param = {
+					"name":username,
+					"password":password
+				}
+				let xhr = new XMLHttpRequest()
+				xhr.open("post","http://127.0.0.1:8888/register",true)
+				xhr.setRequestHeader("Content-type","application/json")
+				xhr.send(JSON.stringify(param))
+				xhr.onreadystatechange = function(){
+					if(xhr.readyState == 4){
+						res = xhr.responseText
+						if(xhr.status!=201){
+							alert("注册失败，原因："+ (res?res:"服务端异常."))
+							return
+						}
+						localStorage.setItem("userinfo",xhr.responseText)
+						location.href = "chat.html"
+					}
+				}
+			}
+		</script>
+	</body>
+</html>

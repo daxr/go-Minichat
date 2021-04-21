@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/chat.css" rel="stylesheet" />
+	</head>
+	<header class="header">
+		<a class="back" id="logout" href="#">退出</a>
+		<span>Minichat聊天室</span>
+	</header>
+	<div id="content" class="content">		
+		<!-- 聊天内容 -->
+		
+	</div>
+	<section class="send-box">
+		<input id="msg" type="text" value="" placeholder="输入消息" />
+		<a id="send">发送</a>
+	</section>
+	<body>
+	</body>
+	<script>
+		var userinfo = JSON.parse(localStorage.getItem("userinfo"))
+		if(userinfo == "" || userinfo == null){
+			location.href = "register.html"
+		}
+		
+		document.getElementById("send").onclick = function(){
+			let msg = document.getElementById("msg").value
+			if(msg == ""){
+				alert("发送内容不能为空")
+				return
+			}
+			let param = {"content":msg}
+			let xhr = new XMLHttpRequest()
+			xhr.open("POST","http://127.0.0.1:8888/send/msg",true)
+			xhr.setRequestHeader("token",userinfo.data.token)
+			xhr.setRequestHeader("Content-Type","aplication/json")
+			xhr.send(JSON.stringify(param))
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState == 4){
+					let res = xhr.responseText
+					if(xhr.status!=201){
+						alert("发送消息失败,原因："+(res?res:"服务端异常."))
+						return
+					}
+					let chatData = JSON.parse(res).data
+					let html = ""
+					html += '<section class="chat-right">'
+					html += '	<div class="fill2"></div>'
+					html += '	<div class="flex-fill"></div>'
+					html += '	<div class="msg-box">'
+					html += '		<span class="time">'+chatData.send_time.substr(10,8)+' '+chatData.send_user+'</span>'
+					html += '		<p class="msg">'+chatData.content+'</p>'
+					html += '	</div>'
+					html += '	<div class="fill"></div>'
+					html += '	<div class="avatar">'+chatData.send_user.substr(0,1)+'</div>'
+					html += '</section>'
+					
+					let node = document.createElement("div")
+					node.innerHTML = html
+					document.getElementById("content").appendChild(node)
+					document.getElementById("msg").value = ""
+					
+					let scrollHeight = document.getElementById("content").scrollHeight
+					let clientHeight = document.getElementById("content").clientHeight
+					document.getElementById("content").scrollTop = scrollHeight - clientHeight
+				}
+			}
+		}
+		
+		function watchMsg(){
+			let xhr = new XMLHttpRequest()
+			xhr.open("GET","http://127.0.0.1:8888/watch/msg",true)
+			xhr.setRequestHeader("token",userinfo.data.token)
+			xhr.setRequestHeader("Content-Type","aplication/json")
+			xhr.send()
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState==3){
+					let msgArr = xhr.responseText.split("\n")
+					let msg = JSON.parse(msgArr[msgArr.length-2])
+					if(msg.send_user!=userinfo.data.name){
+						let html = ''
+						html += '<section class="chat-left">'
+						html += '	<div class="avatar">'+msg.send_user.substr(0,1)+'</div>'
+						html += '	<div class="fill"></div>'
+						html += '	<div class="msg-box">'
+						html += '		<span class="time">'+msg.send_user+' '+msg.send_time.substr(10,8)+'</span>'
+						html += '		<p class="msg">'+msg.content+'</p>'
+						html += '	</div>'
+						html += '	<div class="fill2"></div>'
+						html += '</section>'
+						
+						let node = document.createElement("div")
+						node.innerHTML = html
+						document.getElementById("content").appendChild(node)
+						document.getElementById("msg").value = ""
+						
+						let scrollHeight = document.getElementById("content").scrollHeight
+						let clientHeight = document.getElementById("content").clientHeight
+						document.getElementById("content").scrollTop = scrollHeight - clientHeight
+					}
+				}
+			}
+		}
+		
+		loadChatList()
+		
+		function loadChatList(){
+			let xhr = new XMLHttpRequest()
+			xhr.open("GET","http://127.0.0.1:8888/msg",true)
+			xhr.setRequestHeader("token",userinfo.data.token)
+			xhr.setRequestHeader("Content-Type","aplication/json")
+			xhr.send()
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState == 4){
+					let res = xhr.responseText
+					if(xhr.status!=200){
+						document.getElementById("content").innerHTML = "获取聊天列表失败，原因："+(res?res:"服务端异常.")
+						return
+					}
+					let chatData = JSON.parse(res).data
+					if(chatData != null && chatData.length != 0){
+						let html = ""
+						for(i=0;i<chatData.length;i++){
+							if(chatData[i].send_user==userinfo.data.name){
+								html += '<section class="chat-right">'
+								html += '	<div class="fill2"></div>'
+								html += '	<div class="flex-fill"></div>'
+								html += '	<div class="msg-box">'
+								html += '		<span class="time">'+chatData[i].send_time.substr(10,8)+' '+chatData[i].send_user+'</span>'
+								html += '		<p class="msg">'+chatData[i].content+'</p>'
+								html += '	</div>'
+								html += '	<div class="fill"></div>'
+								html += '	<div class="avatar">'+chatData[i].send_user.substr(0,1)+'</div>'
+								html += '</section>'
+								continue
+							}
+							html += '<section class="chat-left">'
+							html += '	<div class="avatar">'+chatData[i].send_user.substr(0,1)+'</div>'
+							html += '	<div class="fill"></div>'
+							html += '	<div class="msg-box">'
+							html += '		<span class="time">'+chatData[i].send_user+' '+chatData[i].send_time.substr(10,8)+'</span>'
+							html += '		<p class="msg">'+chatData[i].content+'</p>'
+							html += '	</div>'
+							html += '	<div class="fill2"></div>'
+							html += '</section>'
+						}
+						
+						document.getElementById("content").innerHTML = html
+						
+						let scrollHeight = document.getElementById("content").scrollHeight
+						let clientHeight = document.getElementById("content").clientHeight
+						document.getElementById("content").scrollTop = scrollHeight - clientHeight
+					}
+					
+					watchMsg()
+				}
+			}
+		}
+		
+		document.getElementById("logout").onclick = function(){
+			let xhr = new XMLHttpRequest()
+			xhr.open("DELETE","http://127.0.0.1:8888/logout",true)
+			xhr.setRequestHeader("token",userinfo.data.token)
+			xhr.send()
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState == 4){
+					res = xhr.responseText
+					if(xhr.status!=204){
+						alert("退出失败，原因："+(res?res:"服务端异常."))
+					}
+					localStorage.removeItem("userinfo")
+					location.href = "login.html"
+				}
+			}
+		}
+	</script>
+</html>

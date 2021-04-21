@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>登录页面</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/login.css" rel="stylesheet" />
+	</head>
+		<header class="header">登录</header>
+		<section class="item-box">
+			<label>用户名:</label>
+			<input type="text" id="username"/>
+		</section>
+		<section class="item-box">
+			<label>密码:</label>
+			<input type="password" id="password"/>
+		</section>
+		<section class="login" id="login">登录</section>
+		<a class="register" href="register.html">免费注册</a>
+	<body>
+		<script type="text/javascript">
+			document.getElementById("login").onclick = function(){
+				let username = document.getElementById("username").value
+				let password = document.getElementById("password").value
+				if(username==""){
+					alert("用户名不能为空")
+					return
+				}
+				if(password==""){
+					alert("密码不能为空")
+					return
+				}
+				let param = {
+					"name":username,
+					"password":password
+				}
+				let xhr = new XMLHttpRequest()
+				xhr.open("post","http://127.0.0.1:8888/login",true)
+				xhr.setRequestHeader("Content-type","application/json")
+				xhr.send(JSON.stringify(param))
+				xhr.onreadystatechange = function(){
+					if(xhr.readyState == 4){
+						res = xhr.responseText
+						if(xhr.status!=201){
+							alert("登录失败，原因："+ (res?res:"服务端异常."))
+							return
+						}
+						localStorage.setItem("userinfo",res)
+						location.href = "chat.html"
+					}
+				}
+			}
+		</script>
+	</body>
+
+</html>
